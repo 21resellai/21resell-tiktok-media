@@ -7,7 +7,7 @@ synthesized music bed (make_bed.py) ducked under the voice.
 
 Usage:
   python3 tiktok_gen.py script.json OUT_DIR [--silent]     # --silent = no TTS (layout test)
-Env: ELEVENLABS_API_KEY (required unless --silent), ELEVENLABS_VOICE_ID (optional)
+Env: ELEVENLABS_API_KEY (optional if the key is injected as a Network secret, header xi-api-key), ELEVENLABS_VOICE_ID (optional)
 
 SCRIPT FORMAT (every key except "say" is optional):
 {
@@ -779,7 +779,10 @@ class Background:
 # ---------------------------------------------------------------- TTS
 
 def tts_elevenlabs(scenes, out_mp3):
-    key = os.environ["ELEVENLABS_API_KEY"]
+    # Key comes either from env ELEVENLABS_API_KEY or is injected by the environment's
+    # "Network secret" (header xi-api-key for api.elevenlabs.io) - then we send no header.
+    key = os.environ.get("ELEVENLABS_API_KEY", "")
+    auth = {"xi-api-key": key} if key else {}
     voice = os.environ.get("ELEVENLABS_VOICE_ID", "EXAVITQu4vr4xnSDxMaL")
     sep = " "
     parts = [s["say"].strip() for s in scenes]
@@ -790,7 +793,7 @@ def tts_elevenlabs(scenes, out_mp3):
     }).encode()
     req = urllib.request.Request(
         f"https://api.elevenlabs.io/v1/text-to-speech/{voice}/with-timestamps?output_format=mp3_44100_128",
-        data=body, headers={"xi-api-key": key, "Content-Type": "application/json"})
+        data=body, headers={**auth, "Content-Type": "application/json"})
     try:
         with urllib.request.urlopen(req, timeout=180) as r:
             res = json.loads(r.read())
@@ -798,7 +801,7 @@ def tts_elevenlabs(scenes, out_mp3):
         msg = e.read()[:300]
         if e.code not in (400, 404) or os.environ.get("_EL_RETRY") or b"voice" not in msg.lower():
             raise RuntimeError(f"ElevenLabs HTTP {e.code}: {msg!r}")
-        vr = urllib.request.Request("https://api.elevenlabs.io/v1/voices", headers={"xi-api-key": key})
+        vr = urllib.request.Request("https://api.elevenlabs.io/v1/voices", headers=auth)
         with urllib.request.urlopen(vr, timeout=60) as r:
             voices = json.loads(r.read())["voices"]
         fem = [v for v in voices if (v.get("labels") or {}).get("gender") == "female"] or voices
