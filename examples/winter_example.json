@@ -1,0 +1,9 @@
+{"date":"2026-11-26","title":"Cold excuse","caption":"Start before spring. 🖤 #motivation #success #vinted #vintedseller #resell","theme":"winter","seed":7,
+"scenes":[
+{"say":"It's cold. It's dark at four. So you tell yourself: I'll start in spring.","icon":"snowflake","lines":[["IT'S COLD","w"],["I'LL START","w"],["IN SPRING","p"]]},
+{"say":"But winter is when everyone buys coats, jumpers and boots.","icon":"sweater","lines":[["WINTER =","w"],["COATS. JUMPERS.","p"],["BOOTS.","p"]]},
+{"say":"Buy one jumper for five pounds. Sell it on Vinted for thirty.","icon":"phone","lines":[["BUY £5","w"],["SELL £30","p"]]},
+{"say":"Do that three times a week until March.","icon":"calendar","lines":[["3 A WEEK","w"],["UNTIL MARCH","p"]]},
+{"count":{"from":0,"to":1250,"prefix":"£"},"say":"That's over twelve hundred pounds you didn't wait for.","icon":"none","lines":[["YOU DIDN'T WAIT FOR","s"]]},
+{"say":"Spring rewards the people who started in winter.","icon":"stairs","lines":[["SPRING REWARDS","w"],["WHO STARTED","w"],["IN WINTER","p"]]}
+]}
