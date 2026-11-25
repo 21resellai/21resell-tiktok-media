@@ -1,0 +1,131 @@
+{
+ "date": "2026-11-26",
+ "title": "Winter excuse",
+ "caption": "Start in winter. 🖤 #motivation #success #vinted #vintedseller #resell",
+ "theme": "winter",
+ "seed": 26,
+ "footnote": "* EXAMPLE: £25 PROFIT × 3 A WEEK × 14 WEEKS",
+ "scenes": [
+  {
+   "say": "It's cold. It's dark at four.",
+   "pill": "IT'S COLD",
+   "visual": {
+    "type": "crowd",
+    "n": 7,
+    "highlight": 3,
+    "spotlight": false
+   }
+  },
+  {
+   "say": "So everyone says: I'll start in spring.",
+   "pill": "I'LL START...",
+   "visual": {
+    "type": "cards",
+    "items": [
+     "IN SPRING",
+     "AFTER CHRISTMAS"
+    ],
+    "small": "LET'S START",
+    "cross": true
+   }
+  },
+  {
+   "say": "But you won't wait.",
+   "title": [
+    [
+     "BUT YOU",
+     "w"
+    ],
+    [
+     "WON'T.",
+     "p"
+    ]
+   ],
+   "visual": {
+    "type": "crowd",
+    "n": 7,
+    "highlight": 3,
+    "spotlight": true
+   }
+  },
+  {
+   "say": "Buy one winter coat for five pounds. Sell it on Vinted for thirty.",
+   "visual": {
+    "type": "flip",
+    "buy": 5,
+    "sell": 30,
+    "platform": "VINTED"
+   }
+  },
+  {
+   "say": "Three times a week.",
+   "title": [
+    [
+     "3×",
+     "p"
+    ],
+    [
+     "A WEEK",
+     "w"
+    ]
+   ],
+   "visual": {
+    "type": "items",
+    "n": 3,
+    "tag": "+£25"
+   }
+  },
+  {
+   "say": "Week after week, until March.",
+   "title": [
+    [
+     "UNTIL",
+     "w"
+    ],
+    [
+     "MARCH",
+     "p"
+    ]
+   ],
+   "visual": {
+    "type": "calendar",
+    "label": "WEEK",
+    "value": 1,
+    "to": 14,
+    "hourglasses": true
+   },
+   "total": {
+    "label": "TOTAL PROFIT",
+    "value": 1050
+   }
+  },
+  {
+   "say": "That's over a thousand pounds before spring even starts.",
+   "number": {
+    "value": 1050,
+    "prefix": "£",
+    "pre": "ALMOST",
+    "pill": "BEFORE SPRING",
+    "spotlight": true
+   },
+   "footnote": true
+  },
+  {
+   "say": "Spring rewards the ones who started in winter.",
+   "title": [
+    [
+     "START",
+     "w"
+    ],
+    [
+     "NOW",
+     "p"
+    ]
+   ],
+   "visual": {
+    "type": "stairs",
+    "label": "WEEK 1"
+   }
+  }
+ ]
+}

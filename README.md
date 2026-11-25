@@ -5,4 +5,4 @@ Automatic daily TikTok generator for @21resell_mindset, published via Metricool.
   (env `ELEVENLABS_API_KEY`) and an original synthesized music bed (`make_bed.py`). `--silent` = layout test.
 - `media_upload.sh up FILE` / `down` – hosts the video on branch `media` only for the few seconds
   Metricool needs to copy it, then empties the branch. Videos are never kept here.
-- `examples/` – sample script format.
+- `examples/example_winter.json` – sample script (format documented at the top of tiktok_gen.py).
