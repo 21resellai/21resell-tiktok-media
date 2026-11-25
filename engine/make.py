@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 """21Resell Mindset daily TikTok — full pipeline (same engine as the hand-made E/R/W series).
 
-  python3 engine/make.py SCRIPT.json OUT_DIR [--wav VOICE.wav] [--silent] [--stills-only]
+  python3 engine/make.py SCRIPT.json OUT_DIR [--wav VOICE.wav] [--silent] [--stills-only] [--tts-only]
+  (OUT_DIR/tts.mp3 + OUT_DIR/alignment.json from an earlier run are reused)
 
 Steps: voice (ElevenLabs with-timestamps, env ELEVENLABS_API_KEY; or --wav = a ready WAV of the whole script)
  -> pauses shortened to 0.2 s, end silence trimmed -> per-scene windows (window.VO)
  -> headless Chrome renders 1080x1920 60 fps (motion blur 4) in 5 s chunks on all CPUs
  -> original music bed (../make_bed.py) -> mix: music 0.30 + sidechain under voice, voice mono->stereo, alimiter 0.95
  -> OUT_DIR/final.mp4, OUT_DIR/stills/*.jpg (one per scene) + OUT_DIR/qa.json
+Auth: env ELEVENLABS_API_KEY, or none (a Network secret on the proxy adds xi-api-key for api.elevenlabs.io).
 Env: ELEVENLABS_VOICE_ID (default QtY3JBOUKEB5xzrRfOKc = "Maisie", the voice of all previous videos), ELEVENLABS_MODEL (default eleven_v3)
 """
 import base64, io, json, os, re, subprocess, sys, time, urllib.request
@@ -27,8 +29,7 @@ def sh(*a, **k):
 
 # ---------------------------------------------------------------- voice
 def tts(text, out_mp3):
-    key = os.environ.get('ELEVENLABS_API_KEY')
-    if not key: sys.exit('ELEVENLABS_API_KEY missing')
+    key = os.environ.get('ELEVENLABS_API_KEY')  # if absent, the session proxy injects xi-api-key (Network secret)
     voice = os.environ.get('ELEVENLABS_VOICE_ID', 'QtY3JBOUKEB5xzrRfOKc')
     models = [os.environ.get('ELEVENLABS_MODEL', 'eleven_v3'), 'eleven_multilingual_v2']
     last = None
@@ -36,7 +37,7 @@ def tts(text, out_mp3):
         body = json.dumps({'text': text, 'model_id': model,
                            'voice_settings': {'stability': .5, 'similarity_boost': .8, 'style': .35, 'use_speaker_boost': True}}).encode()
         rq = urllib.request.Request(f'https://api.elevenlabs.io/v1/text-to-speech/{voice}/with-timestamps?output_format=mp3_44100_128',
-                                    data=body, headers={'xi-api-key': key, 'Content-Type': 'application/json'})
+                                    data=body, headers=dict({'Content-Type': 'application/json'}, **({'xi-api-key': key} if key else {})))
         try:
             with urllib.request.urlopen(rq, timeout=180) as r: d = json.load(r)
             open(out_mp3, 'wb').write(base64.b64decode(d['audio_base64']))
@@ -128,7 +129,10 @@ def voice(script, out, wav=None):
     if wav:
         x = load_mono(wav); runs = speech_runs(x); win = windows_from_pauses(runs, says)
     else:
-        mp3 = os.path.join(out, 'tts.mp3'); al = tts(' '.join(says), mp3)
+        mp3 = os.path.join(out, 'tts.mp3'); alj = os.path.join(out, 'alignment.json')
+        if os.path.exists(mp3) and os.path.exists(alj): al = json.load(open(alj))   # reuse an earlier take
+        else: al = tts(' '.join(says), mp3); json.dump(al, open(alj, 'w'))
+        if '--tts-only' in sys.argv: print('TTS saved', mp3, alj); sys.exit(0)
         x = load_mono(mp3); runs = speech_runs(x); win = windows_from_alignment(al, says)
     y, m = compress(x, runs)
     vo = [[round(m(a) + LEAD, 3), round(m(b) + LEAD, 3)] for a, b in win]
