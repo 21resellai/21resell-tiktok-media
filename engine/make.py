@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """21Resell Mindset daily TikTok — full pipeline (same engine as the hand-made E/R/W series).
 
-  python3 engine/make.py SCRIPT.json OUT_DIR [--wav VOICE.wav] [--silent] [--stills-only] [--tts-only]
+  python3 engine/make.py SCRIPT.json OUT_DIR [--wav VOICE.wav] [--silent] [--stills-only] [--tts-only] [--vo WINDOWS.json]
   (OUT_DIR/tts.mp3 + OUT_DIR/alignment.json from an earlier run are reused)
 
 Steps: voice (ElevenLabs with-timestamps, env ELEVENLABS_API_KEY; or --wav = a ready WAV of the whole script)
@@ -212,7 +212,7 @@ def stills(page, out, times):
 
 # ---------------------------------------------------------------- audio mix
 def voice_only(out, dur):
-    fc = (f'[1:a]aresample=48000,pan=stereo|c0=c0|c1=c0,apad,afade=t=out:st={max(0, dur - .5):.2f}:d=.5,'
+    fc = (f'[1:a]aresample=48000,pan=stereo|c0=c0|c1=c0,apad,afade=t=out:st={max(0, dur - .5):.2f}:d=0.5,'
           'loudnorm=I=-14:TP=-1.5:LRA=11,alimiter=limit=0.95,aresample=48000[a]')
     tmp = os.path.join(out, 'final.tmp.mp4')
     sh('ffmpeg', '-y', '-loglevel', 'error', '-i', os.path.join(out, 'video.mp4'), '-i', os.path.join(out, 'voice.wav'),
@@ -227,7 +227,7 @@ def mix(out, dur, seed):
           '[2:a]aresample=48000,volume=0.30[m];'
           '[m][sc]sidechaincompress=threshold=0.035:ratio=4:attack=20:release=380[md];'
           '[v][md]amix=inputs=2:duration=first:normalize=0,'
-          f'afade=t=out:st={max(0, dur - .7):.2f}:d=.7,loudnorm=I=-14:TP=-1.5:LRA=11,alimiter=limit=0.95,aresample=48000[a]')
+          f'afade=t=out:st={max(0, dur - .7):.2f}:d=0.7,loudnorm=I=-14:TP=-1.5:LRA=11,alimiter=limit=0.95,aresample=48000[a]')
     tmp = os.path.join(out, 'final.tmp.mp4')
     sh('ffmpeg', '-y', '-loglevel', 'error', '-i', os.path.join(out, 'video.mp4'), '-i', os.path.join(out, 'voice.wav'), '-i', bed,
        '-filter_complex', fc, '-map', '0:v', '-map', '[a]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-shortest', '-movflags', '+faststart', tmp)
@@ -249,6 +249,8 @@ def main():
     wav = a[a.index('--wav') + 1] if '--wav' in a else None
     script = json.load(open(script_path))
     if '--silent' in a: vo = silent_vo(script); vdur = None
+    elif '--vo' in a:  # manual scene windows (JSON list of [start, end]) for OUT_DIR/voice.wav made by an earlier run
+        vo = json.load(open(a[a.index('--vo') + 1])); vdur = None
     else: vo, vdur = voice(script, out, wav)
     page = write_page(script, vo, out)
     mids = [round((s + e) / 2 + .25, 2) for s, e in vo]
