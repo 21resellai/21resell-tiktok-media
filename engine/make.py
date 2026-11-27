@@ -155,7 +155,7 @@ def silent_vo(script):
 def write_page(script, vo, out):
     js = 'window.SCRIPT = ' + json.dumps(script, ensure_ascii=False) + ';\nwindow.VO = ' + json.dumps(vo) + ';\n'
     open(os.path.join(out, 'script.js'), 'w').write(js)
-    html = open(os.path.join(ENG, 'page.html')).read().replace('WORK/script.js', 'file://' + os.path.join(out, 'script.js'))
+    html = open(os.path.join(ENG, 'page.html')).read().replace("window.LANG = 'en'", f"window.LANG = '{script.get('lang', 'en')}'").replace('WORK/script.js', 'file://' + os.path.join(out, 'script.js'))
     html = re.sub(r'src="(\w+\.js)"', lambda mm: f'src="file://{ENG}/{mm.group(1)}"', html)
     if not os.path.exists(os.path.join(out, 'assets')): os.symlink(os.path.join(ENG, 'assets'), os.path.join(out, 'assets'))
     p = os.path.join(out, 'page.html'); open(p, 'w').write(html); return p
@@ -211,6 +211,15 @@ def stills(page, out, times):
 
 
 # ---------------------------------------------------------------- audio mix
+def voice_only(out, dur):
+    fc = (f'[1:a]aresample=48000,pan=stereo|c0=c0|c1=c0,apad,afade=t=out:st={max(0, dur - .5):.2f}:d=.5,'
+          'loudnorm=I=-14:TP=-1.5:LRA=11,alimiter=limit=0.95,aresample=48000[a]')
+    tmp = os.path.join(out, 'final.tmp.mp4')
+    sh('ffmpeg', '-y', '-loglevel', 'error', '-i', os.path.join(out, 'video.mp4'), '-i', os.path.join(out, 'voice.wav'),
+       '-filter_complex', fc, '-map', '0:v', '-map', '[a]', '-c:v', 'copy', '-c:a', 'aac', '-b:a', '192k', '-shortest', '-movflags', '+faststart', tmp)
+    os.replace(tmp, os.path.join(out, 'final.mp4'))
+
+
 def mix(out, dur, seed):
     bed = os.path.join(out, 'bed.wav')
     sh(sys.executable, os.path.join(REPO, 'make_bed.py'), bed, f'{dur + 1:.2f}', str(seed))
@@ -260,7 +269,8 @@ def main():
     sh('ffmpeg', '-y', '-loglevel', 'error', '-f', 'concat', '-safe', '0', '-i', os.path.join(out, 'list.txt'), '-c', 'copy', os.path.join(out, 'video.mp4'))
     if '--silent' in a:
         sh('ffmpeg', '-y', '-loglevel', 'error', '-i', os.path.join(out, 'video.mp4'), '-c', 'copy', os.path.join(out, 'final_silent.mp4')); return
-    mix(out, dur, script.get('seed', 21))
+    if script.get('music', True): mix(out, dur, script.get('seed', 21))
+    else: voice_only(out, dur)
     if not qa(out)['ok']: sys.exit('QA failed')
 
 

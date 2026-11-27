@@ -11,12 +11,15 @@ const COL = c => c === 'p' ? PURL : c === 'r' ? '#FF6B8A' : c === 'g' ? '#7CF2B0
 const PRICE = v => (window.LANG === 'en' ? '£' : '') + fmtAll(Math.round(v)) + (window.LANG === 'en' ? '' : ' zł');
 
 // ---------- title: phrases -> 1..3 lines, auto size to fit 940px ----------
-function titleLines(title, maxW = 940, maxSize = 104, minSize = 52) {
+function titleLines(title, maxW = 800, maxSize = 96, minSize = 48, maxLines = 2) {
   const words = []; (title || []).forEach(([txt, c]) => String(txt).split(' ').filter(Boolean).forEach(w => words.push([w.toUpperCase(), COL(c)])));
   if (!words.length) return { lines: [], size: 0 };
-  const width = (ws, s) => ws.reduce((a, [w]) => a + TW(ctx, w, s, 'POPB', s * .08), 0) + (ws.length - 1) * s * .32;
+  const width = (ws, s) => ws.reduce((a, [w]) => a + TW(ctx, w, s, 'POPB', s * .13), 0) + (ws.length - 1) * s * .32;
   for (let s = maxSize; s >= minSize; s -= 4) {
-    for (let n = 1; n <= 3; n++) {
+    const ph = (title || []).map(([txt, c]) => String(txt).split(' ').filter(Boolean).map(w => [w.toUpperCase(), COL(c)]));
+    if (width(words, s) <= maxW) return { lines: [words], size: s };
+    if (ph.length >= 2 && ph.length <= maxLines && ph.every(l => width(l, s) <= maxW)) return { lines: ph, size: s };
+    for (let n = 2; n <= maxLines; n++) {
       if (words.length < n) break;
       // greedy balanced split into n lines
       const target = width(words, s) / n; const lines = [[]]; let cur = 0;
@@ -27,7 +30,7 @@ function titleLines(title, maxW = 940, maxSize = 104, minSize = 52) {
   return { lines: [words], size: minSize };
 }
 function drawTitle(lt, title, y0 = 470, opts = {}) {
-  const { lines, size } = titleLines(title, opts.maxW, opts.maxSize, opts.minSize);
+  const { lines, size } = titleLines(title, opts.maxW, opts.maxSize, opts.minSize, opts.maxLines);
   lines.forEach((ln, i) => capsWords(ln.map(([w, c]) => [w, c]), CX, y0 + i * size * 1.18, size, lt - i * .22, .09));
   return y0 + (lines.length - 1) * size * 1.18 + size * .6;
 }
@@ -75,7 +78,7 @@ const VIS = {
   week(lt, d, v) { const L = v.labels || ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun']; const n = Math.min(7, 1 + Math.floor(eIOC(P(qlt(lt), 0, d * .8)) * 6.99));
     for (let i = 0; i < 7; i++) { const on = i < n; dayCard(CX - 390 + i * 130, 1050, 112, 140, L[i], on ? (v.mark || '×') : '', on ? 1 : .3, 0, on ? PUR : null); } },
   cards(lt, d, v) { const I = v.items || []; const n = I.length; spotlight(CX, 260, 1500, 90, 520, .45); if (v.sit !== false) stick(CX, 1500, 1.2, 'sit', 1, '#9a9aa6');
-    I.forEach((s, i) => excuse(CX, 600 + i * 190, 860, s, eOC(P(lt, .05 + i * Math.min(.5, d / (n + 1)), .35 + i * Math.min(.5, d / (n + 1)))), v.cross ? eIOC(P(lt, d * .5 + i * .15, d * .5 + .3 + i * .15)) : 0, v.tag || null, v.tag ? eOC(P(lt, .3 + i * .25, .6 + i * .25)) : 0, (i - 1) * .015)); },
+    I.forEach((s, i) => excuse(CX, 780 + i * 180, 860, s, eOC(P(lt, .05 + i * Math.min(.5, d / (n + 1)), .35 + i * Math.min(.5, d / (n + 1)))), v.cross ? eIOC(P(lt, d * .5 + i * .15, d * .5 + .3 + i * .15)) : 0, v.tag || null, v.tag ? eOC(P(lt, .3 + i * .25, .6 + i * .25)) : 0, (i - 1) * .015)); },
   receipt(lt, d, v) { receipt(CX, 1050, 820, v.rows || [], v.total || '', lt, eOC(P(lt, 0, .35)), v.title || 'THE BILL'); },
   wheel(lt, d, v) { const M = v.months || ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC']; const pr = v.full ? 1 : eIOC(P(lt, .05, d + .1)), cy = 1080, R = 280;
     ctx.save(); ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(CX, cy, R, 0, 6.2832); ctx.stroke(); ctx.strokeStyle = PUR; ctx.shadowColor = PUR; ctx.shadowBlur = 24; ctx.lineWidth = 9; ctx.lineCap = 'round'; ctx.beginPath(); ctx.arc(CX, cy, R, -Math.PI / 2, -Math.PI / 2 + 6.2832 * pr); ctx.stroke(); ctx.restore();
@@ -125,7 +128,7 @@ function sceneFn(i) {
     if (sc.pill) mpill(sc.pill, CX, 330, eOC(P(lt, 0, .25)), 30, true);
     if (sc.final) {
       if (hasVis && VIS[v.type]) VIS[v.type](lt, d, v);
-      drawTitle(lt, sc.title, v.type === 'stairs' || v.type === 'step' ? 560 : 760, { maxSize: 130, minSize: 70 });
+      drawTitle(lt, sc.title, v.type === 'stairs' || v.type === 'step' ? 560 : 760, { maxSize: 120, minSize: 60, maxLines: 3 });
     } else {
       if (hasVis && VIS[v.type]) VIS[v.type](lt, d, v);
       const yb = drawTitle(lt, sc.title, 470);
