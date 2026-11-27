@@ -19,13 +19,11 @@ function titleLines(title, maxW = 800, maxSize = 96, minSize = 48, maxLines = 2)
     const ph = (title || []).map(([txt, c]) => String(txt).split(' ').filter(Boolean).map(w => [w.toUpperCase(), COL(c)]));
     if (width(words, s) <= maxW) return { lines: [words], size: s };
     if (ph.length >= 2 && ph.length <= maxLines && ph.every(l => width(l, s) <= maxW)) return { lines: ph, size: s };
-    for (let n = 2; n <= maxLines; n++) {
-      if (words.length < n) break;
-      // greedy balanced split into n lines
-      const target = width(words, s) / n; const lines = [[]]; let cur = 0;
-      words.forEach(w => { const ww = width([w], s); if (lines[lines.length - 1].length && cur + ww > target * 1.08 && lines.length < n) { lines.push([]); cur = 0; } lines[lines.length - 1].push(w); cur += ww + s * .32; });
-      if (lines.every(l => width(l, s) <= maxW)) return { lines, size: s };
-    }
+    // best balanced split into 2..maxLines lines (brute force over break points)
+    let best = null; const N = words.length;
+    const tryCuts = cuts => { const L = []; let a = 0; for (const c of cuts.concat([N])) { L.push(words.slice(a, c)); a = c; } const m = Math.max(...L.map(l => width(l, s))); if (m <= maxW && (!best || L.length < best.L.length || (L.length === best.L.length && m < best.m))) best = { L, m }; };
+    for (let a = 1; a < N; a++) { tryCuts([a]); if (maxLines >= 3) for (let b = a + 1; b < N; b++) tryCuts([a, b]); }
+    if (best) return { lines: best.L, size: s };
   }
   return { lines: [words], size: minSize };
 }
@@ -70,7 +68,7 @@ const VIS = {
   feed(lt, d, v) { const n = Math.min(v.count || 10, 1 + Math.floor(eIOC(P(qlt(lt), 0, d * .85)) * ((v.count || 10) - .01))); feed(CX, 1080, 470, 860, lt, eOC(P(lt, 0, .3)), 1.2 + lt * .6, !!v.frozen);
     if (v.count) { bigNum(String(n), CX + 330, 780, 140, eOC(P(lt, .1, .4)), WH, 'rgba(255,255,255,.7)'); if (v.countLabel) tiny(v.countLabel, CX + 330, 850, 26, eOC(P(lt, .1, .4))); } },
   transfer(lt, d, v) { const A = v.amounts || ['+£250']; phone(CX, 1080, 420, 780, eOC(P(lt, 0, .3)), (w, h) => { A.forEach((a, i) => transfer(0, -h / 2 + 110 + i * 120, w - 20, eOC(P(lt, .25 + i * .4, .55 + i * .4)), a, v.label || LBL.incoming)); }); },
-  notif(lt, d, v) { const n = Math.min(v.n || 1, 9), k = n > 1 ? 1 + Math.floor(eIOC(P(qlt(lt), .3, Math.max(1, d - .5))) * (n - .01)) : 1;
+  notif(lt, d, v) { const n = Math.min(v.n || 1, 10), k = n > 1 ? 1 + Math.floor(eIOC(P(qlt(lt), .3, Math.max(1, d - .5))) * (n - .01)) : 1;
     phone(CX, 1080, 420, 800, 1, (w, h) => { for (let i = 0; i < k; i++) { const y = -h / 2 + 100 + (k - 1 - i) * 74; notif(0, y, w - 24, i === k - 1 ? eOC(P(lt, .2, .5)) : 1, v.title || LBL.sold, v.body || '', 'now'); } });
     if (n > 1) bigNum('×' + k, CX + 330, 760, 120, eOC(P(lt, .2, .5))); },
   calendar(lt, d, v) { const a = v.from ?? 1, b = v.to ?? a; const n = b > a ? Math.round(lerp(a, b, eIOC(P(qlt(lt), .1, Math.max(.5, d * .8))))) : (v.value ?? a);
