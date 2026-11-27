@@ -94,8 +94,8 @@ const VIS = {
   hourglass(lt) { hourglass(CX, 1050, 1.8, lt * 2, 1); },
   dots(lt, d, v) { const n = v.n || 365, f = Math.floor(eIOC(P(qlt(lt), .1, d)) * n); dotGrid(CX, 1080, v.cols || 19, n, v.gap || 42, v.r || 12, f, eOC(P(lt, 0, .3))); if (v.unit) bigNum(f + ' ' + v.unit, CX, 1600, 110, eOC(P(lt, .2, .5))); },
   thermo(lt, d, v) { snow(lt + 3, 90, .9, 1.6); const a = v.from ?? 8, b = v.to ?? -4; thermo(CX - 120, 1080, 1.3, lerp(.75, .12, eIOC(P(lt, 0, d))), 1, Math.round(lerp(a, b, eIOC(P(qlt(lt), 0, d)))) + '°C'); },
-  bars(lt, d, v) { const L = v.labels || [], V = v.values || [], hi = v.highlight || []; const n = V.length, gap = Math.min(80, 860 / n);
-    V.forEach((h, i) => { const p = eOB(P(lt, i * .04, .3 + i * .04), 1.5), hh = 520 * h * clamp(p), x = CX - (n - 1) * gap / 2 + i * gap, on = hi.includes(i); ctx.save(); RR(ctx, x - gap * .32, 1420 - hh, gap * .64, hh, 10); ctx.fillStyle = on ? PUR : 'rgba(255,255,255,.3)'; ctx.shadowColor = on ? PUR : 'transparent'; ctx.shadowBlur = on ? 30 : 0; ctx.fill(); ctx.restore(); if (L[i]) tiny(L[i], x, 1470, 20, 1, on ? PURXL : 'rgba(255,255,255,.55)'); });
+  bars(lt, d, v) { const L = v.labels || [], V = v.values || [], hi = v.highlight || []; const n = V.length, gap = Math.min(n <= 4 ? 230 : 80, 860 / n);
+    V.forEach((h, i) => { const p = eOB(P(lt, i * .04, .3 + i * .04), 1.5), hh = 520 * h * clamp(p), x = CX - (n - 1) * gap / 2 + i * gap, on = hi.includes(i); ctx.save(); RR(ctx, x - gap * .32, 1420 - hh, gap * .64, hh, 10); ctx.fillStyle = on ? PUR : 'rgba(255,255,255,.3)'; ctx.shadowColor = on ? PUR : 'transparent'; ctx.shadowBlur = on ? 30 : 0; ctx.fill(); ctx.restore(); if (L[i]) tiny(L[i], x, 1470, n <= 4 ? 28 : 20, 1, on ? PURXL : 'rgba(255,255,255,.55)'); });
     if (v.caption) tiny(v.caption, CX, 1540, 26, eOC(P(lt, .4, .8)), 'rgba(255,255,255,.6)'); },
   season(lt, d, v) { seasonBar(CX, 1080, 800, lerp(v.from ?? .85, v.to ?? .1, eIOC(P(lt, 0, d))), 1, v.label || 'SEASON'); hourglass(CX, 1400, 1.1, lt * 2, 1); },
   head(lt, d, v) { ctx.save(); ctx.strokeStyle = WH; ctx.lineWidth = 9; ctx.lineJoin = 'round'; ctx.lineCap = 'round'; ctx.shadowColor = 'rgba(255,255,255,.7)'; ctx.shadowBlur = 18; ctx.translate(400, 1300); ctx.scale(1.2, 1.2); ctx.stroke(new Path2D('M-170 300 C-200 150 -262 -60 -200 -180 C-140 -292 60 -322 150 -222 C200 -162 215 -92 205 -40 L250 30 Q258 46 230 56 L222 80 Q233 92 220 104 Q226 140 195 160 C170 176 130 170 110 176 L110 300')); ctx.restore();
@@ -103,6 +103,8 @@ const VIS = {
   glyph(lt, d, v) { bigNum(v.text || '1', CX, 1150, (v.size || 480) * lerp(1.2, 1, eOQ(P(lt, 0, .4))), eOC(P(lt, 0, .2)), PURXL, PUR); },
   split(lt, d, v) { stick(CX - 230, 1450, 1.1, 'stand', 1, '#8a8a95'); if (v.left) pricePill(v.left, CX - 230, 1010, eOC(P(lt, .1, .4)), 46, false); stick(CX + 230, 1450, 1.2, 'up', eOC(P(lt, .2, .5)), PURXL); if (v.right) pricePill(v.right, CX + 230, 990, eOC(P(lt, .35, .65)), 46, true);
     if (v.leftLabel) mpill(v.leftLabel, CX - 230, 1520, 1, 26, true); if (v.rightLabel) mpill(v.rightLabel, CX + 230, 1520, 1, 26); },
+  wardrobe(lt, d, v) { wardrobe(CX, 1450, 2, eOC(P(lt, 0, .3)), eOC(P(lt, .25, .8)));
+    if (v.items) { const L = v.items; L.forEach((k, i) => { const p = eOB(P(lt, .5 + i * .15, .85 + i * .15), 1.6); drawItem(k, CX - 300 + i * 300, 860 - Math.sin(i) * 20, .9 * clamp(p), clamp(p * 2), (i - 1) * .12); }); } },
   pause(lt) { const p = eOC(P(lt, 0, .4)); ctx.save(); ctx.globalAlpha *= p; ctx.fillStyle = WH; ctx.shadowColor = 'rgba(255,255,255,.8)'; ctx.shadowBlur = 30; RR(ctx, CX - 110, 900, 70, 260, 20); ctx.fill(); RR(ctx, CX + 40, 900, 70, 260, 20); ctx.fill(); ctx.restore(); },
 };
 
@@ -149,3 +151,23 @@ SCENE_FN = (t) => {
   const fe = P(t, END - .7, END); if (fe > 0) { ctx.fillStyle = `rgba(0,0,0,${eIC(fe)})`; ctx.fillRect(0, 0, W, H); }
 };
 window.EVENTS = { whoosh: [], boom: [] };
+
+// ---------- light (white, clean) theme: draw the dark look, then invert lightness keeping hues ----------
+if (SC.bg === 'light') {
+  const sbd = Object.getOwnPropertyDescriptor(CanvasRenderingContext2D.prototype, 'shadowBlur');
+  Object.defineProperty(CanvasRenderingContext2D.prototype, 'shadowBlur', { get() { return sbd.get.call(this); }, set(v) { sbd.set.call(this, v * (SC.glow ?? .22)); } });
+  const _bgM = bgM; bgM = (t, gy) => _bgM(t, gy, 0);
+  const tmp = document.createElement('canvas'); tmp.width = W; tmp.height = H; const tx = tmp.getContext('2d');
+  const _fin = finish;
+  finish = function (t, f) {
+    _fin(t, f);
+    tx.globalCompositeOperation = 'copy'; tx.filter = `invert(1) hue-rotate(180deg) saturate(${SC.sat ?? 1.35})`; tx.drawImage(cv, 0, 0); tx.filter = 'none';
+    // soft lavender wash so the white isn't flat
+    tx.globalCompositeOperation = 'multiply';
+    const g = tx.createLinearGradient(0, 0, 0, H); g.addColorStop(0, SC.tintTop || '#F4F0FF'); g.addColorStop(.5, '#FFFFFF'); g.addColorStop(1, SC.tintBottom || '#F1ECFF');
+    tx.fillStyle = g; tx.fillRect(0, 0, W, H);
+    // ink: pure black becomes deep navy-violet, everything lighter is untouched
+    tx.globalCompositeOperation = 'lighten'; tx.fillStyle = SC.ink || '#1C1433'; tx.fillRect(0, 0, W, H); tx.globalCompositeOperation = 'source-over';
+    ctx.save(); ctx.setTransform(1, 0, 0, 1, 0, 0); ctx.globalAlpha = 1; ctx.filter = 'none'; ctx.globalCompositeOperation = 'copy'; ctx.drawImage(tmp, 0, 0); ctx.restore();
+  };
+}
