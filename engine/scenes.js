@@ -28,7 +28,9 @@ function titleLines(title, maxW = 800, maxSize = 96, minSize = 48, maxLines = 2)
   return { lines: [words], size: minSize };
 }
 function drawTitle(lt, title, y0 = 470, opts = {}) {
-  const { lines, size } = titleLines(title, opts.maxW, opts.maxSize, opts.minSize, opts.maxLines);
+  let tl = titleLines(title, opts.maxW, opts.maxSize, opts.minSize, Math.min(2, opts.maxLines || 2));
+  if ((opts.maxLines || 2) > 2 && tl.size < 76) tl = titleLines(title, opts.maxW, opts.maxSize, opts.minSize, opts.maxLines);
+  const { lines, size } = tl;
   lines.forEach((ln, i) => capsWords(ln.map(([w, c]) => [w, c]), CX, y0 + i * size * 1.18, size, lt - i * .22, .09));
   return y0 + (lines.length - 1) * size * 1.18 + size * .6;
 }
